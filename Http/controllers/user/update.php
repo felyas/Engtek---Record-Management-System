@@ -1,10 +1,15 @@
 <?php
 
 use Core\App;
+use Http\Forms\UpdateUserForm;
 
 $db = App::container()->resolver('Core\Database');
+$validation = new UpdateUserForm();
 
-$error = [];
+$javascript = [
+    'isJs' => 1,
+    'file_name' => '/js/user/create.js',
+];
 
 
 $user_id = sanitize($_POST['user_id']);
@@ -17,32 +22,7 @@ $cpassword = sanitize($_POST['confirm_password']);
 $user = $db->query("SELECT * FROM users WHERE user_id = :user_id", ['user_id' => $user_id])->read();
 
 
-if (empty($username)) {
-  $error['username'] = 'Username is required';
-}
-
-if (empty($id_number)) {
-  $error['id_number'] = 'ID number is required';
-} else {
-  $isUserExist = $db->query("SELECT * FROM users WHERE id_number = :id_number AND user_id != :user_id", ['user_id' => $user_id, ':id_number' => $id_number])->read();
-  
-  if (!empty($isUserExist)) {
-    $error['id_number'] = "{$id_number} is already in use";
-  }
-}
-
-if (empty($role)) {
-  $error['role'] = 'Role is required';
-}
-
-if (empty($password)) {
-  $error['password'] = 'Password is required';
-} elseif ($cpassword !== $password) {
-  $error['password'] = 'Passwords do not match';
-}
-
-
-if (!$error) {
+if ($validation->validate($user_id, $id_number, $username, $role, $password, $cpassword)) {
   $hashed_password = password_hash($password, PASSWORD_DEFAULT);
   $updated = $db->query("UPDATE users SET id_number = :id_number, username = :username, role = :role, password = :hashed_password WHERE user_id = :user_id", [
     ':user_id' => $user_id,
@@ -62,5 +42,6 @@ if (!$error) {
 
 view('user/edit.view.php', [
   'user' => $user,
-  'error' => $error,
+  'error' => $validation->errors(),
+  'javascript' => $javascript,
 ]);

@@ -11,7 +11,16 @@ $errors = [];
 $start = 0;
 $limit = 4;
 
-$rowCount = count($db->query("SELECT * FROM users")->readAll()); // 7
+$search = $_GET['search'] ?? '';
+$searchQuery = '';
+$params = [];
+
+if (!empty($search)) {
+    $searchQuery = "WHERE id_number LIKE :search OR username LIKE :search";
+    $params[':search'] = "%$search%";
+}
+
+$rowCount = count($db->query("SELECT * FROM users $searchQuery", $params)->readAll()); // 7
 $pages = ceil($rowCount / $limit);
 // 7 / 4 = 1.75, ceil will round off that 1.75 into 2
 
@@ -24,7 +33,7 @@ if (isset($_GET['page_no'])) {
     }
 }
 // 4    4
-$users = $db->query("SELECT * FROM users LIMIT $start, $limit")->readAll();
+$users = $db->query("SELECT * FROM users $searchQuery LIMIT $start, $limit", $params)->readAll();
 
 
 
@@ -40,5 +49,7 @@ view('user/user.view.php', [
     'users' => $users,
     'javascript' => $javascript,
     'pages' => $pages,
-    'errors' => $errors
+    'limit' => $limit,
+    'errors' => $errors,
+    'search' => $search,
 ]);

@@ -22,12 +22,14 @@
 		<div class="grid grid-cols-1">
 			<div class="col-span-4 flex flex-col h-auto bg-white p-4 space-y-4">
 				<div class="flex items-center justify-between">
-					<div class="flex items-center">
-						<!-- <div class="w-9 py-2 rounded-l-lg bg-[#393E46] flex items-center justify-center">
-                            <img src="/images/search-solid.svg" class="h-4 w-4" alt="">
-                        </div> -->
-						<input type="text" id="document-search-bar" class="w-66 border border-gray-100 focus:outline-none rounded-r-lg text-sm py-1 px-2" placeholder="Search...">
-					</div>
+
+					<form action="" method="GET" class="flex items-center">
+						<button type="submit" class="w-9 py-2 rounded-l-lg bg-[#393E46] flex items-center justify-center cursor-pointer">
+							<img src="/images/search-solid.svg" class="h-4 w-4" alt="">
+						</button>
+						<input type="text" name="search" id="document-search-bar" value="<?= htmlspecialchars($search ?? '') ?>" class="w-66 border border-gray-100 focus:outline-none rounded-r-lg text-sm py-1 px-2" placeholder="Search...">
+					</form>
+
 					<a href="/users/create" class="text-xs font-bold py-2 px-4 bg-[#45D4A4] text-white flex items-center space-x-2 rounded">
 						<img src="images/plus-solid.svg" class="w-3 h-3" alt="">
 						<p>Add User</p>
@@ -50,6 +52,14 @@
 						</thead>
 
 						<tbody id="tbody">
+
+							<?php if (!$users) : ?>
+								<tr>
+									<td colspan="4" class="text-center text-gray-300 py-2">
+										No Data Found on Database
+									</td>
+								</tr>
+							<?php endif; ?>
 
 							<?php if ($errors) : ?>
 								<tr>
@@ -97,27 +107,39 @@
 				</div>
 				<div id="pagination" class="flex items-center justify-between">
 					<div class="flex items-center justify-center text-sm">
-						<p class="text-xs">Showing <?= $_GET['page_no'] ?? 1 ?> of <?= $pages ?> pages</p>
+						<p class="text-xs">Showing <?= $_GET['page_no'] ?? 1 ?> of <?= !$users ? '1' : $pages ?> pages</p>
 					</div>
 
 					<div class="pagination flex space-x-2">
-						<a href="?page_no=1" class="w-7 h-7 flex items-center justify-center bg-gray-100 text-[#393E46] text-lg rounded-lg hover:font-semibold">&laquo;</a>
+
+						<?php if (!$users) : ?>
+							<a class="w-7 h-7 flex items-center justify-center bg-gray-300 text-[#393E46] text-lg rounded-lg cursor-default">&laquo;</a>
+						<?php else : ?>
+							<a href="?page_no=1<?= $search ? '&search=' . urlencode($search) : '' ?>" class="w-7 h-7 flex items-center justify-center bg-gray-100 text-[#393E46] text-lg rounded-lg hover:font-semibold">&laquo;</a>
+						<?php endif; ?>
 
 						<?php if (isset($_GET['page_no']) && $_GET['page_no'] > 1) : ?>
-							<a href="?page_no=<?= $_GET['page_no'] - 1 ?>" class="w-10 h-7 flex items-center justify-center bg-gray-100 text-[#393E46] text-xl rounded-lg hover:font-semibold">&#8249;</a>
+							<a href="?page_no=<?= $_GET['page_no'] - 1 ?><?= $search ? '&search=' . urlencode($search) : '' ?>" class="w-10 h-7 flex items-center justify-center bg-gray-100 text-[#393E46] text-xl rounded-lg hover:font-semibold">&#8249;</a>
 						<?php else : ?>
 							<a class="w-10 h-7 flex items-center cursor-default justify-center bg-gray-300 text-[#393E46] text-xl rounded-lg">&#8249;</a>
 						<?php endif; ?>
 
-						<?php if (!isset($_GET['page_no'])) : ?>
-							<a href="?page_no=2" class="w-10 h-7 flex items-center justify-center bg-gray-100 text-[#393E46] text-xl rounded-lg hover:font-semibold">&#8250;</a>
+						<?php if (!$users || $pages === 1) : ?>
+							<a class="w-10 h-7 flex items-center cursor-default justify-center bg-gray-300 text-[#393E46] text-xl rounded-lg">&#8250;</a>
+						<?php elseif (!isset($_GET['page_no'])): ?>
+							<a href="?page_no=2<?= $search ? '&search=' . urlencode($search) : '' ?>" class="w-10 h-7 flex items-center justify-center bg-gray-100 text-[#393E46] text-xl rounded-lg hover:font-semibold">&#8250;</a>
 						<?php elseif ($_GET['page_no'] >= $pages) : ?>
 							<a class="w-10 h-7 flex items-center cursor-default justify-center bg-gray-300 text-[#393E46] text-xl rounded-lg">&#8250;</a>
 						<?php else : ?>
-							<a href="?page_no=<?= $_GET['page_no'] + 1 ?>" class="w-10 h-7 flex items-center justify-center bg-gray-100 text-[#393E46] text-xl rounded-lg hover:font-semibold">&#8250;</a>
+							<a href="?page_no=<?= $_GET['page_no'] + 1 ?><?= $search ? '&search=' . urlencode($search) : '' ?>" class="w-10 h-7 flex items-center justify-center bg-gray-100 text-[#393E46] text-xl rounded-lg hover:font-semibold">&#8250;</a>
 						<?php endif; ?>
 
-						<a href="?page_no=<?= $pages ?>" class="w-7 h-7 flex items-center justify-center bg-gray-100 text-[#393E46] text-lg rounded-lg hover:font-semibold">&raquo;</a>
+						<?php if (!$users) : ?>
+							<a class="w-7 h-7 flex items-center justify-center bg-gray-300 text-[#393E46] text-lg rounded-lg cursor-default">&raquo;</a>
+						<?php else : ?>
+							<a href="?page_no=<?= $pages ?><?= $search ? '&search=' . urlencode($search) : '' ?>" class="w-7 h-7 flex items-center justify-center bg-gray-100 text-[#393E46] text-lg rounded-lg hover:font-semibold">&raquo;</a>
+						<?php endif; ?>
+
 					</div>
 				</div>
 			</div>
